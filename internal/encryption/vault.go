@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -13,12 +14,14 @@ type secretEntry struct {
 	Secret       string `json:"secret"`
 	DateAdded    string `json:"dateAdded"`
 	LastModified string `json:"lastModified"`
+	Version      string `json:"version"`
 }
 
 type PublicSecretEntry struct {
 	Key          string `json:"key"`
 	DateAdded    string `json:"dateAdded"`
 	LastModified string `json:"lastModified"`
+	Version      string `json:"version"`
 }
 
 func GetPublicVault() []PublicSecretEntry {
@@ -30,6 +33,7 @@ func GetPublicVault() []PublicSecretEntry {
 			Key:          secret.Key,
 			DateAdded:    secret.DateAdded,
 			LastModified: secret.LastModified,
+			Version:      secret.Version,
 		}
 
 		publicVault = append(publicVault, publicEntry)
@@ -73,6 +77,7 @@ func AddSecret(name string, value string) (string, bool) {
 	entry.Secret = encryptedValue
 	entry.DateAdded = time.Now().Format("2006-01-02 15:04:05")
 	entry.LastModified = time.Now().Format("2006-01-02 15:04:05")
+	entry.Version = "1"
 
 	keyVault = append(keyVault, entry)
 
@@ -118,6 +123,7 @@ func UpdateSecret(name string, newValue string) (string, bool) {
 			}
 			keyVault[i].Secret = secret
 			keyVault[i].LastModified = time.Now().Format("2006-01-02 15:04:05")
+			keyVault[i].Version = incrementVersion(keyVault[i].Version)
 			updated = true
 			break
 		}
@@ -177,4 +183,10 @@ func storeJSON(keyVault []secretEntry) {
 	}
 
 	fmt.Println("Cove - StoreJSON: Keyvault has been stored.")
+}
+
+func incrementVersion(version string) string {
+	v, _ := strconv.Atoi(version)
+	v++
+	return strconv.Itoa(v)
 }

@@ -65,7 +65,7 @@ func parseCLI(args []string) {
 
 		greenLog("Secret has been added")
 
-	case "remove", "r":
+	case "remove", "r", "delete", "d":
 
 		if len(args) != 2 {
 			yellowLog("Get requires 2 total arguments.")
@@ -111,18 +111,24 @@ func parseCLI(args []string) {
 func displayPublicVault() {
 	publicVault := encryption.GetPublicVault()
 
-	header := fmt.Sprintf("%-20s | %-20s | %-20s\n", "Key", "Date Added", "Last Modified")
-	divider := fmt.Sprintln(strings.Repeat("-", 20) + "-+-" + strings.Repeat("-", 20) + "-+-" + strings.Repeat("-", 20))
+	header := fmt.Sprintf("%-25s | %-20s | %-20s | %-10s\n", "Key", "Date Added", "Last Modified", "Version")
+	divider := fmt.Sprintln(
+		strings.Repeat("-", 25) + "-+-" +
+			strings.Repeat("-", 20) + "-+-" +
+			strings.Repeat("-", 20) + "-+-" +
+			strings.Repeat("-", 10),
+	)
 
 	greenLog(header)
 	greenLog(divider)
 
 	for _, entry := range publicVault {
 		row := fmt.Sprintf(
-			"%-20s | %-20s | %-20s\n",
+			"%-25s | %-20s | %-20s | %-10s\n",
 			entry.Key,
 			entry.DateAdded,
 			entry.LastModified,
+			entry.Version,
 		)
 		greenLog(row)
 	}
