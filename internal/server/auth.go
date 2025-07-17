@@ -11,9 +11,10 @@ import (
 
 // Pulls client secret from environment variables
 func getClientSecret() string {
-	err := godotenv.Load()
+
+	err := godotenv.Load("../../.env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("Cove - Auth: Error loading .env file")
 	}
 	return os.Getenv("COVE_CLIENT_SECRET")
 }
