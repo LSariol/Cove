@@ -1,7 +1,7 @@
 package main
 
 import (
-	"time"
+	"os"
 
 	"github.com/LSariol/Cove/internal/cli"
 	"github.com/LSariol/Cove/internal/server"
@@ -9,9 +9,12 @@ import (
 
 func main() {
 
-	go server.StartServer()
+	server.StartServer()
 
-	time.Sleep(2 * time.Second)
-	cli.StartCLI()
+	if os.Getenv("HEADLESS") != "true" {
+		cli.StartCLI()
+	} else {
+		select {}
+	}
 
 }
