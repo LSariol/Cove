@@ -1,0 +1,7 @@
+
+.gitignore
+
+# local configs
+.env.exmaple
+<!-- .env
+vault.json -->
