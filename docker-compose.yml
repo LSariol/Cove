@@ -16,7 +16,7 @@ services:
       - type: bind
         source: ./internal/encryption/vault.json
         target: /app/cove/vault.json
-        read_only: true
+        read_only: false
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:2100/health"]
