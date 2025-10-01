@@ -1,0 +1,26 @@
+name: cove
+
+services:
+  cove:
+    build:                      
+      context: .
+      dockerfile: Dockerfile
+    container_name: cove
+    ports:
+      - "2100:2100"
+    volumes:
+      - type: bind
+        source: ./.env
+        target: /app/cove/.env
+        read_only: true
+      - type: bind
+        source: ./internal/encryption/vault.json
+        target: /app/cove/vault.json
+        read_only: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:2100/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
