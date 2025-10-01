@@ -16,6 +16,6 @@ func StartServer() {
 
 	fmt.Println("Routes Defined")
 
-	fmt.Println("Server is running at http://localhost:8081")
-	log.Fatal(http.ListenAndServe("0.0.0.0:8081", mux))
+	fmt.Println("Server is running at http://localhost:2100")
+	log.Fatal(http.ListenAndServe("0.0.0.0:2100", mux))
 }

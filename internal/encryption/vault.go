@@ -154,7 +154,7 @@ func readJSON() []secretEntry {
 
 	var keyVault []secretEntry
 
-	data, err := os.ReadFile("../../internal/encryption/vault.json")
+	data, err := os.ReadFile(vaultPath())
 	if err != nil {
 		fmt.Println("Cove - Vault: Failed to load vault.json")
 		fmt.Println(err)
@@ -177,7 +177,7 @@ func storeJSON(keyVault []secretEntry) {
 		fmt.Println("Cove - storeJSON: Failed to Marhsal json into keyVault.")
 	}
 
-	err = os.WriteFile("../../internal/encryption/vault.json", keyVaultData, 0644)
+	err = os.WriteFile(vaultPath(), keyVaultData, 0644)
 	if err != nil {
 		fmt.Println("Cove - storeJSON: Failed to write to vault.json.")
 	}
@@ -189,4 +189,12 @@ func incrementVersion(version string) string {
 	v, _ := strconv.Atoi(version)
 	v++
 	return strconv.Itoa(v)
+}
+
+func vaultPath() string {
+	if p := os.Getenv("VAULT_PATH"); p != "" {
+		return p
+	}
+
+	return "/app/vault/vault.json"
 }

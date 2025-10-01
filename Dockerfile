@@ -1,11 +1,14 @@
-# import base image
+# -- Build --
 FROM golang:1.21-alpine AS builder
 WORKDIR /app
 COPY . .
 RUN go build -o cove ./cmd/cove
 
-
+# -- Final --
 FROM alpine:latest
+WORKDIR /app
+
 COPY --from=builder /app/cove /cove
-EXPOSE 8081
+
+EXPOSE 2100
 CMD ["/cove"]

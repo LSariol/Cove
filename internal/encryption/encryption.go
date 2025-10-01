@@ -6,18 +6,13 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"log"
 	"os"
-
-	"github.com/joho/godotenv"
 )
 
 func getEncryptionKey() string {
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Fatal("Cove - GetEncryptionKey: Error loading .env file")
-	}
+
 	return os.Getenv("VAULT_ENCRYPTION_KEY")
+
 }
 
 func encryptData(data string) (string, error) {
