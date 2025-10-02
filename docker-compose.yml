@@ -10,12 +10,12 @@ services:
       - "2100:2100"
     volumes:
       - type: bind
-        source: ./.env
-        target: /app/cove/.env
+        source: C:/Users/Lu/Server/Storage/cove/.env
+        target: /app/vault/.env
         read_only: true
       - type: bind
-        source: ./internal/encryption/vault.json
-        target: /app/cove/vault.json
+        source: C:/Users/Lu/Server/Storage/cove/vault.json
+        target: /app/vault/vault.json
         read_only: false
     restart: unless-stopped
     healthcheck:
