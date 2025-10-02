@@ -17,6 +17,8 @@ services:
         source: C:/Users/Lu/Server/Storage/cove/vault.json
         target: /app/vault/vault.json
         read_only: false
+    stdin_open: true  // keeps STD open for the CLI
+    tty: true         // allocates a pseudo-TTY so you can interact
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:2100/health"]
