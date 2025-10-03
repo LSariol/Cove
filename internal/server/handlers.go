@@ -36,8 +36,6 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("Health Check Successful")
-
 }
 
 func authHandler(w http.ResponseWriter, r *http.Request) {
