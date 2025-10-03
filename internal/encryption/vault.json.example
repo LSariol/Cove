@@ -1,2 +1,16 @@
 [
+    	{
+		"key": "Test",
+		"secret": "encrypted secret value",
+		"dateAdded": "2025-07-16 13:19:05",
+		"lastModified": "2025-07-16 13:19:05",
+		"version": "1"
+	},
+	{
+		"key": "TestToken",
+		"secret": "encrypted secret value",
+		"dateAdded": "2025-07-17 13:16:32",
+		"lastModified": "2025-10-02 14:50:51",
+		"version": "3"
+	}
 ]

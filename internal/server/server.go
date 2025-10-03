@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
 func StartServer() {
@@ -16,6 +17,10 @@ func StartServer() {
 
 	fmt.Println("Routes Defined")
 
-	fmt.Println("Server is running at http://localhost:2100")
-	log.Fatal(http.ListenAndServe("0.0.0.0:2100", mux))
+	port := os.Getenv("APP_PORT")
+	address := "0.0.0.0:" + port
+
+	fmt.Println("Server is running at http://localhost:" + port)
+
+	log.Fatal(http.ListenAndServe(address, mux))
 }

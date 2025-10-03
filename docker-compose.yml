@@ -5,6 +5,12 @@ services:
     build:                      
       context: .
       dockerfile: Dockerfile
+      environment:
+        - APP_ENV=PROD
+        - APP_PORT=2100
+        - APP_ENV_PATH=/app/vault/.env
+        - APP_VAULT_PATH=/app/vault/vault.json
+        - APP_MARKER_DIR=/app/vault/markers
     container_name: cove
     ports:
       - "2100:2100"
@@ -16,6 +22,10 @@ services:
       - type: bind
         source: C:/Users/Lu/Server/Storage/cove/vault.json
         target: /app/vault/vault.json
+        read_only: false
+      - type: bind
+        source: C:/Users/Lu/Server/Storage/cove/markers   
+        target: /app/vault/markers
         read_only: false
     stdin_open: true  # keeps STD open for the CLI
     tty: true         # allocates a pseudo-TTY so you can interact

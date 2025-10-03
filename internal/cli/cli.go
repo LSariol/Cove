@@ -100,7 +100,7 @@ func parseCLI(args []string) {
 	case "list", "l":
 
 		if len(args) != 1 {
-			yellowLog("Update requires 1 argument.")
+			yellowLog("List requires 1 argument.")
 			yellowLog("list")
 			return
 		}

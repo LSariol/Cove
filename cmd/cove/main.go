@@ -8,14 +8,17 @@ import (
 	"syscall"
 
 	"github.com/LSariol/Cove/internal/cli"
-	"github.com/LSariol/Cove/internal/envs"
+	"github.com/LSariol/Cove/internal/config"
 	"github.com/LSariol/Cove/internal/server"
 )
 
 func main() {
 
-	err := envs.Load()
-	if err != nil {
+	if err := config.Load(); err != nil {
+		panic(err)
+	}
+
+	if err := config.Ensure(); err != nil {
 		panic(err)
 	}
 

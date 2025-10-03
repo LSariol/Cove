@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Pulls client secret from environment variables
+// Gets client secret from environment variables
 func getClientSecret() string {
 
 	return os.Getenv("COVE_CLIENT_SECRET")

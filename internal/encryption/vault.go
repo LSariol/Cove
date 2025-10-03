@@ -192,7 +192,7 @@ func incrementVersion(version string) string {
 }
 
 func vaultPath() string {
-	if p := os.Getenv("VAULT_PATH"); p != "" {
+	if p := os.Getenv("APP_VAULT_PATH"); p != "" {
 		return p
 	}
 
