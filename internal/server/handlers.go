@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,7 +16,7 @@ func defineRoutes(mux *http.ServeMux) {
 
 	// Home route: no middleware needed
 	mux.HandleFunc("/health", healthHandler)
-	mux.HandleFunc("/bootstrap/lighthouse", boostrapHandler)
+	mux.HandleFunc("/bootstrap/lighthouse", bootstrapHandler)
 
 	// Routes with authentication middleware
 	mux.Handle("/secrets", authenticateClientSecret(http.HandlerFunc(secretHandler)))
@@ -106,35 +105,81 @@ func secretHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func boostrapHandler(w http.ResponseWriter, r *http.Request) {
+func bootstrapHandler(w http.ResponseWriter, r *http.Request) {
 
-	dir := os.Getenv("APP_MARKER_PATH")
-	if dir == "" {
-		dir = "/app/vault/markers"
-	}
-
-	if err := os.MkdirAll(dir, 0o700); err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
-		return
-	}
-
-	marker := filepath.Join(dir, "boostrap_completed")
-
-	f, err := os.OpenFile(marker, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+	// Create the marker file
+	err := CreateBootstrapMarker()
 	if err != nil {
 		http.Error(w, "forbidden", http.StatusForbidden)
 		return
 	}
 
-	_ = f.Close()
-
+	// Load client secret
 	clientSecret := os.Getenv("COVE_CLIENT_SECRET")
 	if clientSecret == "" {
-		_ = os.Remove(marker)
+		_ = DeleteBootstrapMarker()
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
 
+	// Prepare JSON response
+	response := struct {
+		Secret string `json:"secret"`
+	}{
+		Secret: clientSecret,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	io.WriteString(w, `{"client_secret":"`+clientSecret+`"}`)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		_ = DeleteBootstrapMarker()
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println("Bootstrap complete")
+}
+
+func CreateBootstrapMarker() error {
+	dir := os.Getenv("APP_MARKER_PATH")
+	if dir == "" {
+		dir = "/app/vault/markers"
+	}
+
+	// Ensure directory exists
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return fmt.Errorf("failed to create marker directory: %w", err)
+	}
+
+	marker := filepath.Join(dir, "bootstrap_completed")
+
+	// Create marker file, fail if it already exists
+	f, err := os.OpenFile(marker, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+	if err != nil {
+		return fmt.Errorf("failed to create marker file: %w", err)
+	}
+	_ = f.Close()
+
+	return nil
+}
+
+// deleteBootstrapMarker removes the bootstrap marker file if it exists.
+func DeleteBootstrapMarker() error {
+	dir := os.Getenv("APP_MARKER_PATH")
+	if dir == "" {
+		dir = "/app/vault/markers"
+	}
+
+	marker := filepath.Join(dir, "bootstrap_completed")
+
+	// Attempt to remove the file
+	if err := os.Remove(marker); err != nil {
+		// Ignore if file doesn't exist
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("failed to remove marker file: %w", err)
+		}
+	}
+
+	fmt.Println("bootstrap cleared")
+
+	return nil
 }

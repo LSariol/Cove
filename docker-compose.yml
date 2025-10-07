@@ -16,15 +16,15 @@ services:
       - "2100:2100"
     volumes:
       - type: bind
-        source: C:/Users/Lu/Server/Storage/cove/.env
+        source: /srv/server/storage/cove/.env
         target: /app/vault/.env
         read_only: true
       - type: bind
-        source: C:/Users/Lu/Server/Storage/cove/vault.json
+        source: /srv/server/storage/cove/vault.json
         target: /app/vault/vault.json
         read_only: false
       - type: bind
-        source: C:/Users/Lu/Server/Storage/cove/markers   
+        source: /srv/server/storage/cove/markers   
         target: /app/vault/markers
         read_only: false
     stdin_open: true  # keeps STD open for the CLI

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/LSariol/Cove/internal/encryption"
+	"github.com/LSariol/Cove/internal/server"
 )
 
 func StartCLI() {
@@ -105,6 +106,25 @@ func parseCLI(args []string) {
 			return
 		}
 		displayPublicVault()
+	case "bootstrap", "b":
+
+		if len(args) != 2 {
+			yellowLog("bootstrap requires 2 arguments.")
+			yellowLog("bootstrap <clear/lock>")
+			return
+		}
+
+		if args[1] == strings.ToLower("clear") {
+			if err := server.DeleteBootstrapMarker(); err != nil {
+				redLog(fmt.Sprintf("Error clearing marker: %w", err))
+			}
+		}
+
+		if args[1] == strings.ToLower("lock") {
+			if err := server.CreateBootstrapMarker(); err != nil {
+				redLog(fmt.Sprintf("Error clearing marker: %w", err))
+			}
+		}
 	}
 }
 
