@@ -9,6 +9,7 @@ import (
 
 	"github.com/LSariol/Cove/internal/cli"
 	"github.com/LSariol/Cove/internal/config"
+	"github.com/LSariol/Cove/internal/database"
 	"github.com/LSariol/Cove/internal/server"
 )
 
@@ -25,9 +26,16 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	go server.StartServer()
+	db := database.NewDB()
 
-	cli.StartCLI()
+	db.Connect(ctx)
+
+	srv := server.NewServer(db)
+	cli := cli.NewCLI(db)
+
+	go srv.Start()
+
+	cli.StartCLI(ctx)
 
 	<-ctx.Done()
 	log.Println("Shutting Down...")

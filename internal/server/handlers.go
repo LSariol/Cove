@@ -10,22 +10,20 @@ import (
 	"time"
 )
 
-const boostrap bool = false
-
-func defineRoutes(mux *http.ServeMux) {
+func (s *Server) defineRoutes(mux *http.ServeMux) {
 
 	// Home route: no middleware needed
-	mux.HandleFunc("/health", healthHandler)
-	mux.HandleFunc("/bootstrap/lighthouse", bootstrapHandler)
+	mux.HandleFunc("/health", s.healthHandler)
+	mux.HandleFunc("/bootstrap/lighthouse", s.bootstrapHandler)
 
 	// Routes with authentication middleware
-	mux.Handle("/secrets", authenticateClientSecret(http.HandlerFunc(secretHandler)))
-	mux.Handle("/secrets/", authenticateClientSecret(http.HandlerFunc(secretHandler)))
-	mux.Handle("/auth", authenticateClientSecret(http.HandlerFunc(authHandler)))
+	mux.Handle("/secrets", authenticateClientSecret(http.HandlerFunc(s.secretHandler)))
+	mux.Handle("/secrets/", authenticateClientSecret(http.HandlerFunc(s.secretHandler)))
+	mux.Handle("/auth", authenticateClientSecret(http.HandlerFunc(s.authHandler)))
 
 }
 
-func healthHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	response := struct {
@@ -43,7 +41,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func authHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	response := struct {
@@ -63,11 +61,11 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func secretHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) secretHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path == "/secrets" {
 		if r.Method == http.MethodGet {
-			getAllSecrets(w, r)
+			s.getAllSecrets(w, r)
 			return
 		}
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -84,19 +82,19 @@ func secretHandler(w http.ResponseWriter, r *http.Request) {
 
 	case http.MethodGet:
 
-		getSecret(w, r, id)
+		s.getSecret(w, r, id)
 
 	case http.MethodPost:
 
-		postSecret(w, r, id)
+		s.postSecret(w, r, id)
 
 	case http.MethodDelete:
 
-		deleteSecret(w, r, id)
+		s.deleteSecret(w, r, id)
 
 	case http.MethodPatch:
 
-		patchSecret(w, r, id)
+		s.patchSecret(w, r, id)
 
 	default:
 
@@ -105,7 +103,7 @@ func secretHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func bootstrapHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) bootstrapHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create the marker file
 	err := CreateBootstrapMarker()

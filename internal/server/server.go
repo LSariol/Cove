@@ -5,22 +5,30 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/LSariol/Cove/internal/database"
 )
 
-func StartServer() {
+type Server struct {
+	DB *database.Database
+}
 
-	fmt.Println("Starting Server")
+func NewServer(db *database.Database) *Server {
+	return &Server{
+		DB: db,
+	}
+}
+
+func (s *Server) Start() {
 
 	//multiplexer (router)
 	mux := http.NewServeMux()
-	defineRoutes(mux)
-
-	fmt.Println("Routes Defined")
+	s.defineRoutes(mux)
 
 	port := os.Getenv("APP_PORT")
 	address := "0.0.0.0:" + port
 
-	fmt.Println("Server is running at http://localhost:" + port)
+	fmt.Printf("Running on %s\n", address)
 
 	log.Fatal(http.ListenAndServe(address, mux))
 }

@@ -2,15 +2,26 @@ package cli
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/LSariol/Cove/internal/encryption"
+	"github.com/LSariol/Cove/internal/database"
 	"github.com/LSariol/Cove/internal/server"
 )
 
-func StartCLI() {
+type CLI struct {
+	DB *database.Database
+}
+
+func NewCLI(db *database.Database) *CLI {
+	return &CLI{
+		DB: db,
+	}
+}
+
+func (c *CLI) StartCLI(ctx context.Context) {
 
 	scanner := bufio.NewScanner(os.Stdin)
 
@@ -20,11 +31,11 @@ func StartCLI() {
 			break
 		}
 		input := scanner.Text()
-		parseCLI(strings.Fields(input))
+		c.parseCLI(ctx, strings.Fields(input))
 	}
 }
 
-func parseCLI(args []string) {
+func (c *CLI) parseCLI(ctx context.Context, args []string) {
 
 	if len(args) == 0 {
 		return
@@ -43,13 +54,13 @@ func parseCLI(args []string) {
 			return
 		}
 
-		res, ok := encryption.GetSecret(args[1])
-		if !ok {
-			redLog(res + ": " + args[1])
+		res, err := c.DB.GetSecret(ctx, args[1])
+		if err != nil {
+			redLog(fmt.Sprintf("error getting %q: %w", args[1], err))
 			return
 		}
 
-		greenLog("Secret has been retreived: " + res)
+		greenLog(fmt.Sprintf("%s : %s", res.Key, res.Value))
 
 	case "add", "a":
 
@@ -59,12 +70,17 @@ func parseCLI(args []string) {
 			return
 		}
 
-		res, ok := encryption.AddSecret(args[1], args[2])
-		if !ok {
-			redLog(res)
+		var newSecret database.Secret = database.Secret{
+			Key:   args[1],
+			Value: args[2],
 		}
 
-		greenLog("Secret has been added")
+		secret, err := c.DB.CreateSecret(ctx, newSecret)
+		if err != nil {
+			redLog(err.Error())
+		}
+
+		greenLog(fmt.Sprintf("%s has been created at %q", secret.Key, secret.DateAdded))
 
 	case "remove", "r", "delete", "d":
 
@@ -74,10 +90,9 @@ func parseCLI(args []string) {
 			return
 		}
 
-		res, ok := encryption.RemoveSecret(args[1])
-		if !ok {
-			redLog(res)
-			return
+		err := c.DB.DeleteSecret(ctx, args[1])
+		if err != nil {
+			redLog(err.Error())
 		}
 
 		greenLog("Secret has been removed")
@@ -90,10 +105,14 @@ func parseCLI(args []string) {
 			return
 		}
 
-		res, ok := encryption.UpdateSecret(args[1], args[2])
-		if !ok {
-			redLog(res)
-			return
+		var newSecret database.Secret = database.Secret{
+			Key:   args[1],
+			Value: args[2],
+		}
+
+		err := c.DB.UpdateSecret(ctx, newSecret)
+		if err != nil {
+			redLog(err.Error())
 		}
 
 		greenLog("Secret has been updated.")
@@ -105,7 +124,8 @@ func parseCLI(args []string) {
 			yellowLog("list")
 			return
 		}
-		displayPublicVault()
+		c.displayPublicVault(ctx)
+
 	case "bootstrap", "b":
 
 		if len(args) != 2 {
@@ -128,8 +148,11 @@ func parseCLI(args []string) {
 	}
 }
 
-func displayPublicVault() {
-	publicVault := encryption.GetPublicVault()
+func (c *CLI) displayPublicVault(ctx context.Context) {
+	publicVault, err := c.DB.GetAllKeys(ctx)
+	if err != nil {
+		redLog(fmt.Sprintf("GetAllKeys: %w", err))
+	}
 
 	header := fmt.Sprintf("%-25s | %-20s | %-20s | %-10s\n", "Key", "Date Added", "Last Modified", "Version")
 	divider := fmt.Sprintln(

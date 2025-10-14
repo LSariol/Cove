@@ -1,4 +1,4 @@
-package encryption
+package crypt
 
 import (
 	"crypto/aes"
@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"os"
 )
 
@@ -15,26 +16,26 @@ func getEncryptionKey() string {
 
 }
 
-func encryptData(data string) (string, error) {
+func Encrypt(data string) (string, error) {
 	encryptionKey := getEncryptionKey()
 
 	// Generate AES cipher block from the encryption key
 	key := sha256.Sum256([]byte(encryptionKey))
 	block, err := aes.NewCipher(key[:])
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("new block: %w", err)
 	}
 
 	//create a GCM cipher mode
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("new gcm: %w", err)
 	}
 
 	// Generate a random nonce (number used once) for GCM
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err := rand.Read(nonce); err != nil {
-		return "", err
+		return "", fmt.Errorf("make nonce: %w", err)
 	}
 
 	//Encrypt the data
@@ -44,7 +45,7 @@ func encryptData(data string) (string, error) {
 
 }
 
-func decryptData(data string) (string, error) {
+func Decrypt(data string) (string, error) {
 
 	encryptionKey := getEncryptionKey()
 

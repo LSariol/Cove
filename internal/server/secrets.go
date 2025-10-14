@@ -3,137 +3,149 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
-	"github.com/LSariol/Cove/internal/encryption"
+	"github.com/LSariol/Cove/internal/database"
 )
 
-type payload struct {
-	SecretID    string `json:"secretID"`
-	SecretValue string `json:"secretValue"`
-}
+// Get benign vault data for CLI
+func (s *Server) getAllSecrets(w http.ResponseWriter, r *http.Request) {
 
-type response struct {
-	Message string `json:"message"`
-}
+	keys, err := s.DB.GetAllKeys(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 
-func getAllSecrets(w http.ResponseWriter, r *http.Request) {
-	publicKeyVault := encryption.GetPublicVault()
-	fmt.Println(publicKeyVault)
+	var pubKeys []PublicSecret
+	for _, key := range keys {
+		var pubKey PublicSecret
+		pubKey.Key = key.Key
+		pubKey.Version = key.Version
+		pubKey.TimesPulled = key.TimesPulled
+		pubKey.DateAdded = key.DateAdded
+		pubKey.LastModified = key.LastModified
+		pubKeys = append(pubKeys, pubKey)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 
-	if err := json.NewEncoder(w).Encode(publicKeyVault); err != nil {
+	if err := json.NewEncoder(w).Encode(pubKeys); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		fmt.Println("Cove - getAllSecrets: failed to encode response:", err)
 		return
 	}
 
-	fmt.Println("GetAllSecrets Complete")
+	log.Println("All secrets got.")
 
 }
 
-func getSecret(w http.ResponseWriter, r *http.Request, id string) {
+func (s *Server) getSecret(w http.ResponseWriter, r *http.Request, ID string) {
 
-	secret, err := encryption.GetSecret(id)
-	if !err {
-		http.Error(w, secret, http.StatusInternalServerError)
-		fmt.Println(secret)
+	secret, err := s.DB.GetSecret(r.Context(), ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
 	}
 
-	response := struct {
-		Secret string `json:"secret"`
-	}{
-		Secret: secret,
-	}
+	response := packPayload(secret)
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		fmt.Println("Cove - getAllSecrets: failed to encode response:", err)
+		http.Error(w, "failed to get", http.StatusInternalServerError)
+		log.Println(err)
 		return
 	}
 
-	fmt.Println("GetSecret Complete")
+	log.Printf("%s got.\n", ID)
 
 }
 
-func postSecret(w http.ResponseWriter, r *http.Request, ID string) {
+func (s *Server) postSecret(w http.ResponseWriter, r *http.Request, ID string) {
 
 	fmt.Println("Cove - postSecret")
 
-	var load payload
+	var secret Secret
 
-	if err := json.NewDecoder(r.Body).Decode(&load); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&secret); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		fmt.Println("Cove - postSecret: failed to decode JSON:", err)
 		return
 	}
 
-	msg, ok := encryption.AddSecret(ID, load.SecretValue)
-	if !ok {
-		http.Error(w, msg, http.StatusBadRequest)
-		fmt.Println("Cove - postSecret: ", msg)
+	var dbSecret database.Secret = database.Secret{
+		Key:   ID,
+		Value: secret.SecretValue,
+	}
+
+	secre, err := s.DB.CreateSecret(r.Context(), dbSecret)
+	if err != nil {
+		http.Error(w, "failed to create", http.StatusBadRequest)
+		log.Println(err)
 		return
 	}
 
+	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
-	res := response{
-		Message: msg,
-	}
+	res := packPayload(secre)
 
 	json.NewEncoder(w).Encode(res)
 
-	fmt.Println("PostSecret Complete")
+	log.Printf("%s has been created.\n", ID)
 
 }
 
-func patchSecret(w http.ResponseWriter, r *http.Request, ID string) {
+func (s *Server) patchSecret(w http.ResponseWriter, r *http.Request, ID string) {
 
 	fmt.Println("Cove - patchSecret")
-	var load payload
+	var secret Secret
 
-	if err := json.NewDecoder(r.Body).Decode(&load); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&secret); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		fmt.Println("Cove - patchSecret: failed to decode JSON:", err)
 		return
 	}
 
-	msg, ok := encryption.UpdateSecret(ID, load.SecretValue)
-	if !ok {
-		http.Error(w, msg, http.StatusBadRequest)
-		fmt.Println("Cove - patchSecret: ", msg)
+	var dbSecret database.Secret = database.Secret{
+		Key:   ID,
+		Value: secret.SecretValue,
+	}
+
+	err := s.DB.UpdateSecret(r.Context(), dbSecret)
+	if err != nil {
+		http.Error(w, "patch failed", http.StatusBadRequest)
+		log.Println(err)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	res := response{
-		Message: msg,
-	}
+	// No body 204 response
+	w.WriteHeader(http.StatusNoContent)
 
-	json.NewEncoder(w).Encode(res)
-
-	fmt.Println("Patch Secret Complete")
+	log.Printf("%s has been patched.\n", ID)
 
 }
 
-func deleteSecret(w http.ResponseWriter, r *http.Request, ID string) {
+func (s *Server) deleteSecret(w http.ResponseWriter, r *http.Request, ID string) {
 	fmt.Println("Cove - deleteSecret")
 
-	msg, ok := encryption.RemoveSecret(ID)
-	if !ok {
-		http.Error(w, msg, http.StatusBadRequest)
-		fmt.Println("Cove - deleteSecret: ", msg)
+	err := s.DB.DeleteSecret(r.Context(), ID)
+	if err != nil {
+		http.Error(w, "delete failed", http.StatusBadRequest)
+		log.Println(err)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	res := response{
-		Message: msg,
-	}
+	// No body 204 repsonse.
+	w.WriteHeader(http.StatusNoContent)
+	log.Printf("%s has been deleted.\n", ID)
 
-	json.NewEncoder(w).Encode(res)
+}
 
-	fmt.Println("DeleteSecret Complete")
+func packPayload(s database.Secret) Secret {
+	var secret Secret
 
+	secret.SecretID = s.Key
+	secret.SecretValue = s.Value
+
+	return secret
 }
