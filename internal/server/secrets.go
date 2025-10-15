@@ -15,6 +15,7 @@ func (s *Server) getAllSecrets(w http.ResponseWriter, r *http.Request) {
 	keys, err := s.DB.GetAllKeys(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	var pubKeys []PublicSecret
@@ -46,6 +47,7 @@ func (s *Server) getSecret(w http.ResponseWriter, r *http.Request, ID string) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
+		return
 	}
 
 	response := packPayload(secret)

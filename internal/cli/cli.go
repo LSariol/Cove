@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/LSariol/Cove/internal/database"
 	"github.com/LSariol/Cove/internal/server"
@@ -149,17 +150,42 @@ func (c *CLI) parseCLI(ctx context.Context, args []string) {
 }
 
 func (c *CLI) displayPublicVault(ctx context.Context) {
-	publicVault, err := c.DB.GetAllKeys(ctx)
+	publicVault, err := c.DB.GetAllKeys(ctx) // should return []Secret
 	if err != nil {
-		redLog(fmt.Sprintf("GetAllKeys: %w", err))
+		redLog(fmt.Sprintf("GetAllKeys: %v", err))
+		return
 	}
 
-	header := fmt.Sprintf("%-25s | %-20s | %-20s | %-10s\n", "Key", "Date Added", "Last Modified", "Version")
+	const (
+		keyW    = 25
+		dateW   = 23 // "2006-01-02 15:04:05.000" = 23 chars
+		versW   = 7
+		pulledW = 12
+		timeFmt = "2006-01-02 15:04:05.000"
+	)
+
+	formatTime := func(t time.Time) string {
+		if t.IsZero() {
+			return "-"
+		}
+		return t.Format(timeFmt)
+	}
+
+	header := fmt.Sprintf(
+		"%-*s | %-*s | %-*s | %-*s | %-*s\n",
+		keyW, "Key",
+		dateW, "Date Added",
+		dateW, "Last Modified",
+		versW, "Version",
+		pulledW, "Times Pulled",
+	)
+
 	divider := fmt.Sprintln(
-		strings.Repeat("-", 25) + "-+-" +
-			strings.Repeat("-", 20) + "-+-" +
-			strings.Repeat("-", 20) + "-+-" +
-			strings.Repeat("-", 10),
+		strings.Repeat("-", keyW) + " -+- " +
+			strings.Repeat("-", dateW) + " -+- " +
+			strings.Repeat("-", dateW) + " -+- " +
+			strings.Repeat("-", versW) + " -+- " +
+			strings.Repeat("-", pulledW),
 	)
 
 	greenLog(header)
@@ -167,11 +193,12 @@ func (c *CLI) displayPublicVault(ctx context.Context) {
 
 	for _, entry := range publicVault {
 		row := fmt.Sprintf(
-			"%-25s | %-20s | %-20s | %-10s\n",
-			entry.Key,
-			entry.DateAdded,
-			entry.LastModified,
-			entry.Version,
+			"%-*s | %-*s | %-*s | %-*d | %-*d\n",
+			keyW, entry.Key,
+			dateW, formatTime(entry.DateAdded),
+			dateW, formatTime(entry.LastModified),
+			versW, entry.Version,
+			pulledW, entry.TimesPulled,
 		)
 		greenLog(row)
 	}

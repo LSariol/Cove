@@ -46,7 +46,8 @@ func (d *Database) GetSecret(ctx context.Context, key string) (Secret, error) {
 
 	if _, err := tx.Exec(ctx, `
 		UPDATE cove.secrets
-		SET times_pulled = times_pulled + 1
+		SET 
+			times_pulled = times_pulled + 1
 		WHERE secret_key = $1
 	`, key); err != nil {
 		return s, err
