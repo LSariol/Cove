@@ -40,5 +40,5 @@ services:
       - spark
 
 networks:
-  cove:
+  spark:
     external: true
