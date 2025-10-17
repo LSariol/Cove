@@ -158,10 +158,10 @@ func (c *CLI) displayPublicVault(ctx context.Context) {
 
 	const (
 		keyW    = 30
-		dateW   = 23 // "2006-01-02 15:04:05.000" = 23 chars
+		dateW   = 19 // "2006-01-02 15:04:05" = 23 chars
 		versW   = 7
 		pulledW = 12
-		timeFmt = "2006-01-02 15:04:05.000"
+		timeFmt = "2006-01-02 15:04:05"
 	)
 
 	formatTime := func(t time.Time) string {
@@ -181,10 +181,10 @@ func (c *CLI) displayPublicVault(ctx context.Context) {
 	)
 
 	divider := fmt.Sprintln(
-		strings.Repeat("-", keyW) + " -+- " +
-			strings.Repeat("-", dateW) + " -+- " +
-			strings.Repeat("-", dateW) + " -+- " +
-			strings.Repeat("-", versW) + " -+- " +
+		strings.Repeat("-", keyW) + "-+-" +
+			strings.Repeat("-", dateW) + "-+-" +
+			strings.Repeat("-", dateW) + "-+-" +
+			strings.Repeat("-", versW) + "-+-" +
 			strings.Repeat("-", pulledW),
 	)
 
