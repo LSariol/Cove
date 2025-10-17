@@ -61,7 +61,7 @@ func (c *CLI) parseCLI(ctx context.Context, args []string) {
 			return
 		}
 
-		greenLog(fmt.Sprintf("%s : %s", res.Key, res.Value))
+		greenLog(fmt.Sprintf("%s : %s\n", res.Key, res.Value))
 
 	case "add", "a":
 
@@ -81,7 +81,7 @@ func (c *CLI) parseCLI(ctx context.Context, args []string) {
 			redLog(err.Error())
 		}
 
-		greenLog(fmt.Sprintf("%s has been created at %q", secret.Key, secret.DateAdded))
+		greenLog(fmt.Sprintf("%s has been created at %q\n", secret.Key, secret.DateAdded))
 
 	case "remove", "r", "delete", "d":
 
@@ -96,7 +96,7 @@ func (c *CLI) parseCLI(ctx context.Context, args []string) {
 			redLog(err.Error())
 		}
 
-		greenLog("Secret has been removed")
+		greenLog("Secret has been removed\n")
 
 	case "update", "u":
 
@@ -116,7 +116,7 @@ func (c *CLI) parseCLI(ctx context.Context, args []string) {
 			redLog(err.Error())
 		}
 
-		greenLog("Secret has been updated.")
+		greenLog("Secret has been updated.\n")
 
 	case "list", "l":
 
@@ -157,7 +157,7 @@ func (c *CLI) displayPublicVault(ctx context.Context) {
 	}
 
 	const (
-		keyW    = 25
+		keyW    = 30
 		dateW   = 23 // "2006-01-02 15:04:05.000" = 23 chars
 		versW   = 7
 		pulledW = 12
@@ -205,7 +205,7 @@ func (c *CLI) displayPublicVault(ctx context.Context) {
 }
 
 func greenLog(s string) {
-	fmt.Println("\033[32mCove CLI> " + s + "\033[0m")
+	fmt.Print("\033[32mCove CLI> " + s + "\033[0m")
 }
 
 func yellowLog(s string) {
