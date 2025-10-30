@@ -88,6 +88,7 @@ func (d *Database) GetAllKeys(ctx context.Context) ([]Secret, error) {
 	const query = `
 	SELECT id, secret_key, secret_value, version, times_pulled, date_added, last_modified
 	FROM cove.secrets 
+	ORDER BY secret_key ASC
 	`
 
 	rows, err := d.Pool.Query(ctx, query)
